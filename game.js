@@ -6,13 +6,13 @@ const BLOCK = 30;
 
 const COLORS = [
   null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#7986cb', // J - indigo
-  '#ffb74d', // L - orange
+  '#00f0ff', // I - neon cyan
+  '#fcee0a', // O - neon yellow
+  '#b967ff', // T - neon purple
+  '#05ffa1', // S - neon green
+  '#ff2a6d', // Z - neon magenta
+  '#3d7bff', // J - electric blue
+  '#ff8a1f', // L - neon orange
 ];
 
 const PIECES = [
@@ -159,17 +159,23 @@ function updateHUD() {
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
   const color = COLORS[colorIndex];
+  const px = x * size + 1, py = y * size + 1, s = size - 2;
   context.globalAlpha = alpha ?? 1;
+  context.shadowColor = color;
+  context.shadowBlur = alpha ? 0 : 10;
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+  context.fillRect(px, py, s, s);
+  context.shadowBlur = 0;
+  // núcleo oscuro con borde neón
+  context.fillStyle = 'rgba(7,6,13,0.55)';
+  context.fillRect(px + 4, py + 4, s - 8, s - 8);
+  context.fillStyle = 'rgba(255,255,255,0.35)';
+  context.fillRect(px, py, s, 2);
   context.globalAlpha = 1;
 }
 
 function drawGrid() {
-  ctx.strokeStyle = '#22222e';
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.10)';
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();

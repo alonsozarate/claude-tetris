@@ -6,6 +6,8 @@
   --cyan: #00f0ff;
   --magenta: #ff2a6d;
   --dim: #5b5873;
+  /* alto del tablero: 600px máx., o lo que quepa en pantalla junto al título */
+  --board-h: min(600px, calc(100dvh - 170px));
 }
 
 *, *::before, *::after {
@@ -24,7 +26,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   user-select: none;
 }
 
@@ -122,6 +126,9 @@ body::after {
 
 #board {
   display: block;
+  height: var(--board-h);
+  width: auto;
+  aspect-ratio: 1 / 2;
   border: 2px solid var(--cyan);
   background: rgba(8, 6, 16, 0.9);
   box-shadow: 0 0 18px rgba(0, 240, 255, 0.45), inset 0 0 24px rgba(0, 240, 255, 0.12);
@@ -255,6 +262,21 @@ kbd {
 #restart-btn:hover {
   background: var(--cyan);
   box-shadow: 0 0 18px rgba(0, 240, 255, 0.8);
+}
+
+@media (max-height: 760px) {
+  :root { --board-h: min(600px, calc(100dvh - 130px)); }
+  .wrapper { gap: 8px; padding: 8px; }
+  .title { font-size: 36px; letter-spacing: 10px; padding-left: 10px; }
+  .title::before, .title::after { padding-left: 10px; }
+  .subtitle { font-size: 10px; letter-spacing: 4px; }
+  .panel { gap: 10px; }
+  .value { font-size: 20px; }
+}
+
+@media (max-height: 620px) {
+  .controls { display: none; }
+  #next-canvas { width: 80px; height: 80px; }
 }
 
 @media (max-width: 560px) {

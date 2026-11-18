@@ -36,8 +36,11 @@ jobs:
 
             1. Labels:
                - Lista los labels existentes con `gh label list`.
-               - Elige los labels apropiados: un tipo (bug, enhancement, question, documentation) y un área (gameplay, ui, controls, scoring) cuando aplique.
-               - Si falta alguno de esos labels base, créalo con `gh label create`.
+               - Elige TODOS los labels que apliquen de la lista existente, no solo uno:
+                 - Tipo: bug, enhancement, question, documentation (y invalid o duplicate si corresponde).
+                 - Área: ui, accessibility, gameplay, controls, scoring, según el caso.
+                 - Dificultad/ayuda: good first issue si es una tarea pequeña y acotada; help wanted si requiere atención extra.
+               - Si necesitas un label que no existe y es claramente útil (por ejemplo gameplay, controls o scoring), créalo con `gh label create`. No crees labels duplicados de los que ya existen.
                - Aplica los labels con `gh issue edit ${{ github.event.issue.number }} --add-label "..."`.
                - Si es una edición y algún label ya no aplica, quítalo con `--remove-label`.
 

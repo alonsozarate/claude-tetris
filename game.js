@@ -11,7 +11,7 @@ const COLORS = [
   '#b967ff', // T - neon purple
   '#05ffa1', // S - neon green
   '#ff2a6d', // Z - neon magenta
-  '#3d7bff', // J - electric blue
+  '#7db4ff', // J - pale cyberpunk blue (Edgerunners)
   '#ff8a1f', // L - neon orange
 ];
 

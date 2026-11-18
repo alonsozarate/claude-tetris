@@ -28,6 +28,16 @@ const COLOR_SETS = {
   ],
 };
 let COLORS = COLOR_SETS.dark;
+const COLORS = [
+  null,
+  '#00f0ff', // I - neon cyan
+  '#fcee0a', // O - neon yellow
+  '#b967ff', // T - neon purple
+  '#05ffa1', // S - neon green
+  '#ff2a6d', // Z - neon magenta
+  '#7db4ff', // J - pale cyberpunk blue (Edgerunners)
+  '#ff8a1f', // L - neon orange
+];
 
 const PIECES = [
   null,

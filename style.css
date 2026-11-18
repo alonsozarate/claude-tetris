@@ -6,8 +6,54 @@
   --cyan: #00f0ff;
   --magenta: #ff2a6d;
   --dim: #5b5873;
+  --text: #e0e0e0;
+  --title: var(--yellow);
+  --canvas-bg: rgba(8, 6, 16, 0.9);
+  --kbd-bg: #14101f;
+  --overlay-bg: rgba(7, 6, 13, 0.8);
+  --scan: rgba(0, 0, 0, 0.25);
+  --glow: 1; /* intensidad de brillos neón (reducida en light) */
+  --glow-cyan: rgba(0, 240, 255, 0.45);
+  --glow-magenta: rgba(255, 42, 109, 0.4);
+  --glow-yellow: rgba(252, 238, 10, 0.6);
+  --bg-magenta: rgba(255, 42, 109, 0.18);
+  --bg-cyan: rgba(0, 240, 255, 0.15);
+  --btn-bg: #fcee0a;
+  --btn-text: #07060d;
+  --grid: rgba(0, 240, 255, 0.10);
+  --block-core: rgba(7, 6, 13, 0.55);
+  --block-blur: 10;
+  --glitch-blend: screen;
   /* alto del tablero: 600px máx., o lo que quepa en pantalla junto al título */
   --board-h: min(600px, calc(100dvh - 170px));
+}
+
+/* Tema claro: día en Night City (neones saturados sobre papel/neblina) */
+:root[data-theme="light"] {
+  --bg: #f1ecf4;
+  --panel: #ffffff;
+  --yellow: #7a6d00;
+  --cyan: #007585;
+  --magenta: #c4104c;
+  --dim: #4f4a66;
+  --text: #1a1326;
+  --title: #8f8200;
+  --canvas-bg: rgba(255, 255, 255, 0.85);
+  --kbd-bg: #ffffff;
+  --overlay-bg: rgba(241, 236, 244, 0.85);
+  --scan: rgba(26, 19, 38, 0.06);
+  --glow: 0.25;
+  --glow-cyan: rgba(0, 117, 133, 0.3);
+  --glow-magenta: rgba(196, 16, 76, 0.25);
+  --glow-yellow: rgba(143, 130, 0, 0.35);
+  --bg-magenta: rgba(196, 16, 76, 0.14);
+  --bg-cyan: rgba(0, 117, 133, 0.14);
+  --btn-bg: #fcee0a;
+  --btn-text: #1a1326;
+  --grid: rgba(0, 117, 133, 0.18);
+  --block-core: rgba(255, 255, 255, 0.6);
+  --block-blur: 3;
+  --glitch-blend: multiply;
 }
 
 *, *::before, *::after {
@@ -18,10 +64,10 @@
 
 body {
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(255, 42, 109, 0.18), transparent 55%),
-    radial-gradient(ellipse at 90% 100%, rgba(0, 240, 255, 0.15), transparent 55%),
+    radial-gradient(ellipse at 20% 0%, var(--bg-magenta), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, var(--bg-cyan), transparent 55%),
     var(--bg);
-  color: #e0e0e0;
+  color: var(--text);
   font-family: 'Courier New', Courier, monospace;
   display: flex;
   align-items: center;
@@ -42,7 +88,7 @@ body::after {
     to bottom,
     rgba(0, 0, 0, 0) 0,
     rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.25) 3px
+    var(--scan) 3px
   );
 }
 
@@ -66,8 +112,8 @@ body::after {
   font-weight: 900;
   letter-spacing: 14px;
   padding-left: 14px; /* compensa el letter-spacing final */
-  color: var(--yellow);
-  text-shadow: 0 0 8px rgba(252, 238, 10, 0.7), 0 0 28px rgba(252, 238, 10, 0.35);
+  color: var(--title);
+  text-shadow: 0 0 calc(8px * var(--glow)) var(--glow-yellow), 0 0 calc(28px * var(--glow)) var(--glow-yellow);
   animation: flicker 5s infinite;
 }
 
@@ -83,7 +129,7 @@ body::after {
 .title::before {
   color: var(--cyan);
   transform: translate(-3px, 0);
-  mix-blend-mode: screen;
+  mix-blend-mode: var(--glitch-blend, screen);
   opacity: 0.7;
   clip-path: inset(0 0 55% 0);
   animation: glitch 3s infinite steps(1);
@@ -92,7 +138,7 @@ body::after {
 .title::after {
   color: var(--magenta);
   transform: translate(3px, 0);
-  mix-blend-mode: screen;
+  mix-blend-mode: var(--glitch-blend, screen);
   opacity: 0.7;
   clip-path: inset(55% 0 0 0);
   animation: glitch 3s infinite steps(1) reverse;
@@ -103,7 +149,7 @@ body::after {
   font-size: 12px;
   letter-spacing: 6px;
   color: var(--cyan);
-  text-shadow: 0 0 6px var(--cyan);
+  text-shadow: 0 0 calc(6px * var(--glow)) var(--cyan);
 }
 
 @keyframes flicker {
@@ -130,8 +176,8 @@ body::after {
   width: auto;
   aspect-ratio: 1 / 2;
   border: 2px solid var(--cyan);
-  background: rgba(8, 6, 16, 0.9);
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.45), inset 0 0 24px rgba(0, 240, 255, 0.12);
+  background: var(--canvas-bg);
+  box-shadow: 0 0 18px var(--glow-cyan), inset 0 0 24px var(--bg-cyan);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
 }
 
@@ -157,7 +203,7 @@ body::after {
   letter-spacing: 3px;
   color: var(--magenta);
   font-weight: 700;
-  text-shadow: 0 0 6px rgba(255, 42, 109, 0.6);
+  text-shadow: 0 0 calc(6px * var(--glow)) var(--magenta);
 }
 
 .value {
@@ -165,14 +211,14 @@ body::after {
   font-weight: 700;
   color: var(--yellow);
   letter-spacing: 1px;
-  text-shadow: 0 0 8px rgba(252, 238, 10, 0.6);
+  text-shadow: 0 0 calc(8px * var(--glow)) var(--glow-yellow);
 }
 
 #next-canvas {
   display: block;
   border: 1px solid var(--magenta);
-  background: rgba(8, 6, 16, 0.9);
-  box-shadow: 0 0 10px rgba(255, 42, 109, 0.4);
+  background: var(--canvas-bg);
+  box-shadow: 0 0 10px var(--glow-magenta);
 }
 
 /* ---- Controles ---- */
@@ -194,14 +240,14 @@ body::after {
 }
 
 kbd {
-  background: #14101f;
+  background: var(--kbd-bg);
   border: 1px solid var(--cyan);
   border-radius: 0;
   padding: 1px 6px;
   font-size: 11px;
   font-family: inherit;
   color: var(--cyan);
-  text-shadow: 0 0 4px var(--cyan);
+  text-shadow: 0 0 calc(4px * var(--glow)) var(--cyan);
 }
 
 /* ---- Overlay ---- */
@@ -211,7 +257,7 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(7, 6, 13, 0.8);
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
 }
 
@@ -232,19 +278,19 @@ kbd {
   font-weight: 900;
   letter-spacing: 6px;
   color: var(--magenta);
-  text-shadow: 0 0 10px var(--magenta), 0 0 30px rgba(255, 42, 109, 0.5);
+  text-shadow: 0 0 calc(10px * var(--glow)) var(--magenta), 0 0 calc(30px * var(--glow)) var(--glow-magenta);
 }
 
 #overlay-score {
   font-size: 14px;
   color: var(--cyan);
-  text-shadow: 0 0 6px var(--cyan);
+  text-shadow: 0 0 calc(6px * var(--glow)) var(--cyan);
 }
 
 #restart-btn {
   margin-top: 8px;
-  background: var(--yellow);
-  color: #07060d;
+  background: var(--btn-bg);
+  color: var(--btn-text);
   border: none;
   border-radius: 0;
   padding: 10px 28px;
@@ -254,14 +300,43 @@ kbd {
   text-transform: uppercase;
   cursor: pointer;
   letter-spacing: 3px;
-  box-shadow: 0 0 14px rgba(252, 238, 10, 0.6);
+  box-shadow: 0 0 14px var(--glow-yellow);
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
   transition: background 0.15s, box-shadow 0.15s;
 }
 
 #restart-btn:hover {
   background: var(--cyan);
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.8);
+  color: #fff;
+  box-shadow: 0 0 18px var(--glow-cyan);
+}
+
+/* ---- Toggle de tema ---- */
+#theme-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--kbd-bg);
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  border-radius: 0;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 0 8px var(--glow-cyan);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+#theme-toggle:hover,
+#theme-toggle:focus-visible {
+  background: var(--cyan);
+  color: var(--kbd-bg);
+  outline: none;
 }
 
 @media (max-height: 760px) {

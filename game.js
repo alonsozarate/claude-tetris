@@ -4,16 +4,30 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#00f0ff', // I - neon cyan
-  '#fcee0a', // O - neon yellow
-  '#b967ff', // T - neon purple
-  '#05ffa1', // S - neon green
-  '#ff2a6d', // Z - neon magenta
-  '#3d7bff', // J - electric blue
-  '#ff8a1f', // L - neon orange
-];
+const COLOR_SETS = {
+  dark: [
+    null,
+    '#00f0ff', // I - neon cyan
+    '#fcee0a', // O - neon yellow
+    '#b967ff', // T - neon purple
+    '#05ffa1', // S - neon green
+    '#ff2a6d', // Z - neon magenta
+    '#3d7bff', // J - electric blue
+    '#ff8a1f', // L - neon orange
+  ],
+  // mismos índices (1 = I … 7 = L), tonos más saturados/oscuros para fondo claro
+  light: [
+    null,
+    '#00a3b4',
+    '#e6c800',
+    '#8a2be2',
+    '#00a86b',
+    '#e0115f',
+    '#2455e0',
+    '#f06a00',
+  ],
+};
+let COLORS = COLOR_SETS.dark;
 
 const PIECES = [
   null,
@@ -39,6 +53,26 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
+const themeBtn = document.getElementById('theme-toggle');
+
+let gridColor, blockCore, blockBlur;
+
+function applyTheme(theme, save) {
+  document.documentElement.dataset.theme = theme;
+  COLORS = COLOR_SETS[theme];
+  const css = getComputedStyle(document.documentElement);
+  gridColor = css.getPropertyValue('--grid').trim();
+  blockCore = css.getPropertyValue('--block-core').trim();
+  blockBlur = parseFloat(css.getPropertyValue('--block-blur'));
+  const isLight = theme === 'light';
+  themeBtn.textContent = isLight ? 'Modo oscuro' : 'Modo claro';
+  themeBtn.setAttribute('aria-pressed', String(isLight));
+  if (save) {
+    try { localStorage.setItem('theme', theme); } catch (e) {}
+  }
+  // repintar aunque el juego esté en pausa o terminado
+  if (current) { draw(); drawNext(); }
+}
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 
@@ -162,12 +196,12 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
   const px = x * size + 1, py = y * size + 1, s = size - 2;
   context.globalAlpha = alpha ?? 1;
   context.shadowColor = color;
-  context.shadowBlur = alpha ? 0 : 10;
+  context.shadowBlur = alpha ? 0 : blockBlur;
   context.fillStyle = color;
   context.fillRect(px, py, s, s);
   context.shadowBlur = 0;
   // núcleo oscuro con borde neón
-  context.fillStyle = 'rgba(7,6,13,0.55)';
+  context.fillStyle = blockCore;
   context.fillRect(px + 4, py + 4, s - 8, s - 8);
   context.fillStyle = 'rgba(255,255,255,0.35)';
   context.fillRect(px, py, s, 2);
@@ -175,7 +209,7 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = 'rgba(0, 240, 255, 0.10)';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -307,4 +341,10 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
+themeBtn.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
+  themeBtn.blur(); // evita que Espacio sobre el botón dispare hardDrop
+});
+
+applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark', false);
 init();

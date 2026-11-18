@@ -53,6 +53,12 @@ jobs:
                  - Pasos sugeridos para la solución
                  - Riesgos y preguntas abiertas
                - El comentario debe empezar con la línea oculta `<!-- claude-issue-triage -->`.
+               - El comentario debe estar escrito en Markdown compatible con GitHub (GFM):
+                 - Usa encabezados `##` o `###` para cada sección.
+                 - Escribe nombres de archivos, funciones y labels entre backticks, por ejemplo `tryRotate()` o `game.js`.
+                 - Pon fragmentos de código en bloques con triple backtick y el lenguaje, por ejemplo ```js.
+                 - Usa listas con `-` y listas de tareas `- [ ]` para los pasos de la solución; usa tablas GFM si ayudan.
+                 - No uses HTML innecesario ni texto plano sin formato.
                - Antes de comentar, revisa si ya existe un comentario con ese marcador (`gh issue view ... --json comments`). Si existe, actualízalo con `gh issue comment ... --edit-last` en vez de crear otro.
 
             3. No modifiques código, no crees branches ni abras PRs. Solo triage y diagnóstico.

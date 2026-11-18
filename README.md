@@ -88,6 +88,17 @@ Después abre `http://localhost:8000` en el navegador.
 
 ---
 
+## Tema claro / oscuro
+
+El botón de la esquina superior derecha (`Modo claro` / `Modo oscuro`) alterna entre dos temas inspirados en el anime *Cyberpunk: Edgerunners*:
+
+- **Dark (Night City de noche)**: neones amarillo, cian y magenta sobre negro.
+- **Light (Night City de día)**: fondo claro con los mismos acentos más saturados y brillos reducidos para mantener el contraste.
+
+Las scanlines y el glitch del título se mantienen en ambos temas. El tema se guarda en `localStorage`; si no hay preferencia guardada se usa la del sistema (`prefers-color-scheme`) y, por defecto, `dark`.
+
+---
+
 ## Cómo funciona
 
 El juego se compone de tres archivos que cooperan:

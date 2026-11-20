@@ -271,6 +271,9 @@ kbd {
   flex-direction: column;
   gap: 12px;
   align-items: center;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 8px;
 }
 
 #overlay-title {
@@ -309,6 +312,150 @@ kbd {
   background: var(--cyan);
   color: #fff;
   box-shadow: 0 0 18px var(--glow-cyan);
+}
+
+/* ---- Records ---- */
+.records {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--magenta);
+  background: var(--kbd-bg);
+  box-shadow: 0 0 10px var(--glow-magenta);
+}
+
+.records.hidden,
+.name-entry.hidden {
+  display: none;
+}
+
+.records-title {
+  margin: 0;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.records-table th {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--magenta);
+  font-weight: 700;
+  padding: 2px 4px;
+  text-align: left;
+}
+
+.records-table td {
+  padding: 3px 4px;
+  color: var(--text);
+  border-top: 1px solid var(--grid);
+  text-align: left;
+}
+
+.records-table th:nth-child(n+3),
+.records-table td:nth-child(n+3) {
+  text-align: right;
+}
+
+.records-table tr.new-record td {
+  color: var(--yellow);
+  background: var(--bg-magenta);
+  text-shadow: 0 0 calc(4px * var(--glow)) var(--glow-yellow);
+}
+
+.records-empty {
+  text-align: center;
+  color: var(--dim);
+}
+
+.records-stats {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--cyan);
+}
+
+.records-stats span {
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+#clear-records-btn {
+  background: transparent;
+  color: var(--magenta);
+  border: 1px solid var(--magenta);
+  border-radius: 0;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+#clear-records-btn:hover,
+#clear-records-btn:focus-visible {
+  background: var(--magenta);
+  color: var(--kbd-bg);
+  outline: none;
+}
+
+/* ---- Nombre al terminar partida ---- */
+.name-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.name-row {
+  display: flex;
+  gap: 8px;
+}
+
+#player-name {
+  width: 170px;
+  background: var(--kbd-bg);
+  color: var(--yellow);
+  border: 1px solid var(--cyan);
+  border-radius: 0;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  outline: none;
+}
+
+#player-name:focus {
+  box-shadow: 0 0 10px var(--glow-cyan);
+}
+
+#save-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 0;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+
+#save-btn:hover {
+  background: var(--cyan);
+  color: #fff;
 }
 
 /* ---- Toggle de tema ---- */

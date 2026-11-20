@@ -62,6 +62,24 @@
         <div class="overlay-box">
           <p id="overlay-title">GAME OVER</p>
           <p id="overlay-score"></p>
+          <div id="name-entry" class="name-entry hidden">
+            <label for="player-name" class="label">NOMBRE</label>
+            <div class="name-row">
+              <input id="player-name" type="text" maxlength="12" value="AAA" autocomplete="off" spellcheck="false" />
+              <button id="save-btn" type="button">Guardar</button>
+            </div>
+          </div>
+          <section id="records" class="records hidden" aria-label="Records">
+            <p class="label records-title">TOP 5</p>
+            <table class="records-table">
+              <thead>
+                <tr><th>#</th><th>NOMBRE</th><th>PUNTOS</th><th>LÍN</th><th>NIV</th></tr>
+              </thead>
+              <tbody id="records-body"></tbody>
+            </table>
+            <p class="records-stats">Mejor combo: <span id="best-combo">0</span> · Líneas máx: <span id="max-lines">0</span></p>
+            <button id="clear-records-btn" type="button">Borrar records</button>
+          </section>
           <button id="restart-btn">Reiniciar</button>
         </div>
       </div>

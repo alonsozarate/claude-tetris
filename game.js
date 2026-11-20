@@ -71,7 +71,7 @@ function applyTheme(theme, save) {
     try { localStorage.setItem('theme', theme); } catch (e) {}
   }
   // repintar aunque el juego esté en pausa o terminado
-  if (current) { draw(); drawNext(); }
+  if (current) { draw(); drawNext(); } else { drawIdle(); }
 }
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
@@ -143,6 +143,13 @@ function clearLines() {
     level = Math.floor(lines / 10) + 1;
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
+  }
+  // combo: locks consecutivos que limpian líneas; un lock sin limpieza lo reinicia
+  if (cleared) {
+    combo++;
+    gameBestCombo = Math.max(gameBestCombo, combo);
+  } else {
+    combo = 0;
   }
 }
 
@@ -258,12 +265,20 @@ function drawNext() {
       drawBlock(nextCtx, offX + c, offY + r, shape[r][c], NB);
 }
 
+// pantalla de inicio: tablero y preview vacíos (sin piezas todavía)
+function drawIdle() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawGrid();
+  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+}
+
 function endGame() {
   gameOver = true;
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+  showGameOverRecords();
 }
 
 function togglePause() {
@@ -292,11 +307,13 @@ function loop(ts) {
       lockPiece();
     }
   }
+  if (gameOver) return; // endGame() llamado desde un lock dentro de este frame: no dibujar ni reprogramar
   draw();
   animId = requestAnimationFrame(loop);
 }
 
 function init() {
+  savePendingEntry(); // si había una entrada sin guardar, se guarda con el nombre actual
   board = createBoard();
   score = 0;
   lines = 0;
@@ -305,16 +322,22 @@ function init() {
   gameOver = false;
   dropInterval = 1000;
   dropAccum = 0;
+  combo = 0;
+  gameBestCombo = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  recordsEl.classList.add('hidden');
+  nameEntryEl.classList.add('hidden');
+  restartBtn.textContent = 'Reiniciar';
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return; // el nombre se escribe sin disparar controles
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -346,5 +369,175 @@ themeBtn.addEventListener('click', () => {
   themeBtn.blur(); // evita que Espacio sobre el botón dispare hardDrop
 });
 
+// ---- Records (tabla local en localStorage) ----
+const RECORDS_KEY = 'tetris-records';
+const MAX_RECORDS = 5;
+const recordsEl = document.getElementById('records');
+const recordsBody = document.getElementById('records-body');
+const bestComboEl = document.getElementById('best-combo');
+const maxLinesEl = document.getElementById('max-lines');
+const nameEntryEl = document.getElementById('name-entry');
+const nameInput = document.getElementById('player-name');
+const saveBtn = document.getElementById('save-btn');
+const clearBtn = document.getElementById('clear-records-btn');
+
+let combo = 0;            // locks consecutivos con limpieza (partida actual)
+let gameBestCombo = 0;    // mejor combo de la partida actual
+let records = null;       // copia en memoria de 'tetris-records'
+let pendingEntry = null;  // resultado de la última partida, pendiente de guardar nombre
+let highlightEntry = null;
+let clearTimer = null;    // no nulo mientras espera la confirmación de 'Borrar records'
+
+function emptyRecords() {
+  return { scores: [], bestCombo: 0, maxLines: 0 };
+}
+
+function loadRecords() {
+  try {
+    const data = JSON.parse(localStorage.getItem(RECORDS_KEY));
+    if (data && Array.isArray(data.scores)) {
+      const scores = topWith(data.scores
+        .filter(s => s && typeof s.score === 'number')
+        .map(s => ({
+          name: String(s.name || 'AAA').slice(0, 12),
+          score: s.score,
+          lines: Number(s.lines) || 0,
+          level: Number(s.level) || 1,
+        })), null);
+      return { scores, bestCombo: Number(data.bestCombo) || 0, maxLines: Number(data.maxLines) || 0 };
+    }
+  } catch (e) {}
+  return emptyRecords();
+}
+
+function saveRecords(rec) {
+  try {
+    localStorage.setItem(RECORDS_KEY, JSON.stringify({
+      scores: rec.scores,
+      bestCombo: rec.bestCombo,
+      maxLines: rec.maxLines,
+    }));
+  } catch (e) {}
+}
+
+// top N de la lista + entrada opcional (sort estable: en empate gana la ya guardada)
+function topWith(list, entry) {
+  return list.concat(entry ? [entry] : []).sort((a, b) => b.score - a.score).slice(0, MAX_RECORDS);
+}
+
+function entersTop(list, score) {
+  return score > 0 && (list.length < MAX_RECORDS || score > list[list.length - 1].score);
+}
+
+function renderRecords() {
+  const rows = topWith(records.scores, pendingEntry);
+  recordsBody.textContent = '';
+  if (!rows.length) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    td.className = 'records-empty';
+    td.textContent = 'Sin records todavía';
+    tr.appendChild(td);
+    recordsBody.appendChild(tr);
+  }
+  rows.forEach((s, i) => {
+    const tr = document.createElement('tr');
+    if (s === highlightEntry) tr.className = 'new-record';
+    [i + 1, s.name, s.score.toLocaleString(), s.lines, s.level].forEach(v => {
+      const td = document.createElement('td');
+      td.textContent = v;
+      tr.appendChild(td);
+    });
+    recordsBody.appendChild(tr);
+  });
+  bestComboEl.textContent = records.bestCombo;
+  maxLinesEl.textContent = records.maxLines;
+}
+
+function showGameOverRecords() {
+  records = loadRecords();
+  records.bestCombo = Math.max(records.bestCombo, gameBestCombo);
+  records.maxLines = Math.max(records.maxLines, lines);
+  saveRecords(records);
+  pendingEntry = entersTop(records.scores, score)
+    ? { name: 'AAA', score, lines, level }
+    : null;
+  highlightEntry = pendingEntry;
+  nameInput.value = 'AAA';
+  nameEntryEl.classList.toggle('hidden', !pendingEntry);
+  recordsEl.classList.remove('hidden');
+  renderRecords();
+  if (pendingEntry) {
+    nameInput.focus();
+    nameInput.select();
+  }
+}
+
+function savePendingEntry() {
+  if (!pendingEntry) return;
+  records = loadRecords(); // recarga: otra pestaña pudo guardar records desde que terminó la partida
+  records.scores = topWith(records.scores, pendingEntry);
+  saveRecords(records);
+  pendingEntry = null;
+  nameInput.blur(); // no dejar el foco en un input oculto
+  nameEntryEl.classList.add('hidden');
+  renderRecords();
+}
+
+function showStartScreen() {
+  gameOver = true; // bloquea los controles hasta pulsar Jugar
+  cancelAnimationFrame(animId);
+  overlayTitle.textContent = 'PREPARADO';
+  overlayScore.textContent = '';
+  restartBtn.textContent = 'Jugar';
+  drawIdle();
+  records = loadRecords();
+  pendingEntry = null;
+  highlightEntry = null;
+  nameEntryEl.classList.add('hidden');
+  recordsEl.classList.remove('hidden');
+  renderRecords();
+  overlay.classList.remove('hidden');
+}
+
+function disarmClear() {
+  clearTimeout(clearTimer);
+  clearTimer = null;
+  clearBtn.textContent = 'Borrar records';
+}
+
+nameInput.addEventListener('input', () => {
+  if (!pendingEntry) return;
+  pendingEntry.name = nameInput.value.trim().slice(0, 12) || 'AAA';
+  renderRecords();
+});
+
+nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    savePendingEntry();
+  }
+});
+
+saveBtn.addEventListener('click', savePendingEntry);
+
+clearBtn.addEventListener('click', () => {
+  if (clearTimer === null) {
+    // primer clic: pedir confirmación (sin confirm/alert, que bloquean el navegador)
+    clearBtn.textContent = '¿Seguro? Pulsa de nuevo';
+    clearTimer = setTimeout(disarmClear, 3000);
+    return;
+  }
+  disarmClear();
+  records = emptyRecords();
+  saveRecords(records);
+  pendingEntry = null;
+  highlightEntry = null;
+  nameInput.blur();
+  nameEntryEl.classList.add('hidden');
+  renderRecords();
+});
+
 applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark', false);
-init();
+showStartScreen();

@@ -29,6 +29,112 @@ const COLOR_SETS = {
 };
 let COLORS = COLOR_SETS.dark;
 
+// paleta suave para la skin Pastel (mismos índices 1 = I … 7 = L)
+const PASTEL_SETS = {
+  dark: [
+    null,
+    '#9ef0f5', '#fff3a0', '#d6c2ff', '#b8f5d6', '#ffb3c9', '#b3d4ff', '#ffd1a3',
+  ],
+  light: [
+    null,
+    '#7fd8e0', '#f5e27a', '#b9a0f0', '#8fe3b8', '#f49ab5', '#8fb8f0', '#f7b77a',
+  ],
+};
+
+// cada skin: paleta por tema + función de dibujo de un bloque
+// px, py, s = área interior del bloque; ghost = bloque fantasma (sin brillo)
+const SKINS = {
+  retro: {
+    palette: COLOR_SETS,
+    draw(c, px, py, s, color, ghost) {
+      c.shadowColor = color;
+      c.shadowBlur = ghost ? 0 : blockBlur;
+      c.fillStyle = color;
+      c.fillRect(px, py, s, s);
+      c.shadowBlur = 0;
+      // núcleo oscuro con borde neón
+      c.fillStyle = blockCore;
+      c.fillRect(px + 4, py + 4, s - 8, s - 8);
+      c.fillStyle = 'rgba(255,255,255,0.35)';
+      c.fillRect(px, py, s, 2);
+    },
+  },
+  neon: {
+    palette: COLOR_SETS,
+    draw(c, px, py, s, color, ghost) {
+      // brillo fuerte alrededor del bloque
+      c.shadowColor = color;
+      c.shadowBlur = ghost ? 0 : 12 + blockBlur;
+      c.fillStyle = color;
+      c.fillRect(px, py, s, s);
+      c.shadowBlur = 0;
+      // tubo de neón: núcleo oscuro con contorno brillante
+      c.fillStyle = blockCore;
+      c.fillRect(px + 4, py + 4, s - 8, s - 8);
+      c.strokeStyle = color;
+      c.lineWidth = 1.5;
+      c.strokeRect(px + 4.5, py + 4.5, s - 9, s - 9);
+    },
+  },
+  pastel: {
+    palette: PASTEL_SETS,
+    draw(c, px, py, s, color, ghost) {
+      const r = s * 0.25;
+      c.fillStyle = color;
+      roundRectPath(c, px, py, s, s, r);
+      c.fill();
+      if (ghost) return;
+      // brillo superior redondeado
+      c.fillStyle = 'rgba(255,255,255,0.45)';
+      roundRectPath(c, px + 4, py + 4, s - 8, (s - 8) * 0.35, r / 2);
+      c.fill();
+      // borde suave
+      c.strokeStyle = 'rgba(0,0,0,0.12)';
+      c.lineWidth = 1;
+      roundRectPath(c, px + 0.5, py + 0.5, s - 1, s - 1, r);
+      c.stroke();
+    },
+  },
+  pixel: {
+    palette: COLOR_SETS,
+    draw(c, px, py, s, color, ghost) {
+      c.fillStyle = color;
+      c.fillRect(px, py, s, s);
+      if (ghost) return;
+      // textura de tablero de ajedrez en celdas de píxel
+      const p = Math.max(2, Math.floor(s / 7));
+      const n = Math.floor(s / p);
+      c.fillStyle = 'rgba(255,255,255,0.28)';
+      for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++)
+          if ((i + j) % 2 === 0) c.fillRect(px + i * p, py + j * p, p, p);
+      // bisel: luz arriba-izquierda, sombra abajo-derecha
+      c.fillStyle = 'rgba(255,255,255,0.5)';
+      c.fillRect(px, py, s, 2);
+      c.fillRect(px, py, 2, s);
+      c.fillStyle = 'rgba(0,0,0,0.35)';
+      c.fillRect(px, py + s - 2, s, 2);
+      c.fillRect(px + s - 2, py, 2, s);
+    },
+  },
+};
+
+const SKIN_NAMES = Object.keys(SKINS);
+let currentSkin = SKIN_NAMES.includes(document.documentElement.dataset.skin)
+  ? document.documentElement.dataset.skin
+  : 'retro';
+
+// rectángulo redondeado como path (compatible sin ctx.roundRect)
+function roundRectPath(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
 const PIECES = [
   null,
   [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], // I
@@ -54,12 +160,13 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeBtn = document.getElementById('theme-toggle');
+const skinSelect = document.getElementById('skin-select');
 
 let gridColor, blockCore, blockBlur;
 
 function applyTheme(theme, save) {
   document.documentElement.dataset.theme = theme;
-  COLORS = COLOR_SETS[theme];
+  COLORS = SKINS[currentSkin].palette[theme];
   const css = getComputedStyle(document.documentElement);
   gridColor = css.getPropertyValue('--grid').trim();
   blockCore = css.getPropertyValue('--block-core').trim();
@@ -190,21 +297,34 @@ function updateHUD() {
   levelEl.textContent = level;
 }
 
+// lee de nuevo las variables CSS del tema/skin activos (la rejilla depende de la skin)
+function refreshCssVars() {
+  const css = getComputedStyle(document.documentElement);
+  gridColor = css.getPropertyValue('--grid').trim();
+  blockCore = css.getPropertyValue('--block-core').trim();
+  blockBlur = parseFloat(css.getPropertyValue('--block-blur'));
+}
+
+function applySkin(name, save) {
+  if (!SKINS[name]) return;
+  currentSkin = name;
+  document.documentElement.dataset.skin = name;
+  refreshCssVars();
+  COLORS = SKINS[name].palette[document.documentElement.dataset.theme];
+  if (save) {
+    try { localStorage.setItem('skin', name); } catch (e) {}
+  }
+  // repintar aunque el juego esté en pausa o terminado
+  if (current) { draw(); drawNext(); }
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
   const color = COLORS[colorIndex];
   const px = x * size + 1, py = y * size + 1, s = size - 2;
   context.globalAlpha = alpha ?? 1;
-  context.shadowColor = color;
-  context.shadowBlur = alpha ? 0 : blockBlur;
-  context.fillStyle = color;
-  context.fillRect(px, py, s, s);
+  SKINS[currentSkin].draw(context, px, py, s, color, !!alpha);
   context.shadowBlur = 0;
-  // núcleo oscuro con borde neón
-  context.fillStyle = blockCore;
-  context.fillRect(px + 4, py + 4, s - 8, s - 8);
-  context.fillStyle = 'rgba(255,255,255,0.35)';
-  context.fillRect(px, py, s, 2);
   context.globalAlpha = 1;
 }
 
@@ -346,5 +466,19 @@ themeBtn.addEventListener('click', () => {
   themeBtn.blur(); // evita que Espacio sobre el botón dispare hardDrop
 });
 
+// con el select enfocado, las flechas y Espacio no deben mover la pieza ni cambiar la skin sin querer
+skinSelect.addEventListener('keydown', e => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+});
+
+skinSelect.addEventListener('change', () => {
+  applySkin(skinSelect.value, true);
+  skinSelect.blur(); // evita que Espacio tras elegir skin dispare hardDrop
+});
+
 applyTheme(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark', false);
+skinSelect.value = currentSkin;
 init();

@@ -14,12 +14,27 @@
       }
       document.documentElement.dataset.theme = t;
     })();
+    // aplica la skin de bloques antes de pintar para evitar parpadeo
+    (function () {
+      var s = null;
+      try { s = localStorage.getItem('skin'); } catch (e) {}
+      if (['retro', 'neon', 'pastel', 'pixel'].indexOf(s) === -1) s = 'retro';
+      document.documentElement.dataset.skin = s;
+    })();
   </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrapper">
-    <button id="theme-toggle" type="button" aria-pressed="false">Modo claro</button>
+    <div class="top-controls">
+      <select id="skin-select" aria-label="Estilo de bloques">
+        <option value="retro">Retro</option>
+        <option value="neon">Neón</option>
+        <option value="pastel">Pastel</option>
+        <option value="pixel">Pixel art</option>
+      </select>
+      <button id="theme-toggle" type="button" aria-pressed="false">Modo claro</button>
+    </div>
     <header class="title-block">
       <h1 class="title" data-text="TETRIS">TETRIS</h1>
       <p class="subtitle">// NIGHT CITY EDITION</p>

@@ -311,11 +311,39 @@ kbd {
   box-shadow: 0 0 18px var(--glow-cyan);
 }
 
-/* ---- Toggle de tema ---- */
-#theme-toggle {
+/* ---- Controles superiores: skin + tema ---- */
+.top-controls {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+/* ---- Selector de skin ---- */
+#skin-select {
+  background: var(--kbd-bg);
+  color: var(--cyan);
+  border: 1px solid var(--cyan);
+  border-radius: 0;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--glow-cyan);
+}
+
+#skin-select:focus-visible {
+  outline: 1px dashed var(--cyan);
+  outline-offset: 2px;
+}
+
+/* ---- Toggle de tema ---- */
+#theme-toggle {
   background: var(--kbd-bg);
   color: var(--cyan);
   border: 1px solid var(--cyan);
@@ -327,9 +355,32 @@ kbd {
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  z-index: 2;
   box-shadow: 0 0 8px var(--glow-cyan);
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+/* ---- Overrides por skin (los colores de bloque viven en game.js) ---- */
+/* Neon: fondo negro en tema oscuro; el tablero y el panel se oscurecen */
+:root[data-skin="neon"]:not([data-theme="light"]) {
+  --bg: #000000;
+  --canvas-bg: rgba(0, 0, 0, 0.95);
+  --grid: rgba(255, 42, 109, 0.12);
+}
+
+/* Pastel: menos scanlines y bordes del tablero más suaves */
+:root[data-skin="pastel"] {
+  --scan: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-skin="pastel"] #board {
+  clip-path: none;
+  border-radius: 12px;
+}
+
+/* Pixel art: bordes y tipografía de píxel sin suavizado */
+:root[data-skin="pixel"] #board,
+:root[data-skin="pixel"] #next-canvas {
+  image-rendering: pixelated;
 }
 
 #theme-toggle:hover,

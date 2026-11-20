@@ -54,6 +54,13 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeBtn = document.getElementById('theme-toggle');
+const pauseMenu = document.getElementById('pause-menu');
+const resumeBtn = document.getElementById('resume-btn');
+const pauseRestartBtn = document.getElementById('pause-restart-btn');
+const controlsBtn = document.getElementById('controls-btn');
+const controlsPanel = document.getElementById('controls-panel');
+const controlsBackBtn = document.getElementById('controls-back');
+const startLevelSel = document.getElementById('start-level');
 
 let gridColor, blockCore, blockBlur;
 
@@ -75,6 +82,7 @@ function applyTheme(theme, save) {
 }
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let startLevel = 1; // nivel inicial elegido en el menú de pausa
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -140,7 +148,7 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = Math.max(startLevel, Math.floor(lines / 10) + 1);
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
@@ -263,19 +271,37 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  // game over: solo botón Reiniciar, sin menú de pausa
+  restartBtn.hidden = false;
+  pauseMenu.hidden = true;
+  controlsPanel.hidden = true;
   overlay.classList.remove('hidden');
+}
+
+// quita el foco de botones/select para que Espacio no los active tras cerrar el menú
+function blurFocused() {
+  if (document.activeElement) document.activeElement.blur();
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    overlay.classList.add('hidden');
+    pauseMenu.hidden = false;
+    controlsPanel.hidden = true;
+    blurFocused();
+    // evita el salto de gravedad acumulado durante la pausa
+    dropAccum = 0;
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
     overlayTitle.textContent = 'PAUSA';
     overlayScore.textContent = '';
+    restartBtn.hidden = true;
+    pauseMenu.hidden = false;
+    controlsPanel.hidden = true;
     overlay.classList.remove('hidden');
   }
 }
@@ -300,23 +326,29 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  blurFocused();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
-  if (paused || gameOver) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
+  if (paused) {
+    // menú abierto: flechas/Espacio no mueven la pieza ni activan botones
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
+    return;
+  }
+  if (gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
       if (!collide(current.shape, current.x - 1, current.y)) current.x--;
@@ -340,6 +372,20 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+resumeBtn.addEventListener('click', togglePause);
+pauseRestartBtn.addEventListener('click', init);
+controlsBtn.addEventListener('click', () => {
+  pauseMenu.hidden = true;
+  controlsPanel.hidden = false;
+});
+controlsBackBtn.addEventListener('click', () => {
+  controlsPanel.hidden = true;
+  pauseMenu.hidden = false;
+});
+startLevelSel.addEventListener('change', () => {
+  startLevel = Number(startLevelSel.value);
+});
 
 themeBtn.addEventListener('click', () => {
   applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
